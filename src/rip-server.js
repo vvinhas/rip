@@ -6,7 +6,6 @@ const app = express()
 const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
-const store = require('store')
 
 const run = (config, args) => {
   const log = []
@@ -27,7 +26,6 @@ const run = (config, args) => {
     // Apply the router to the app
     app.use(`/${graveAlias}`, grave.make(graveStore))
     // Set the main store
-    store.set(grave, graveStore)
     log.push(`  ⚰  Adding "${graveAlias}" grave`)
   })
   // Port Settings

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 // Core
 const path = require('path')
+const _ = require('lodash')
 const express = require('express')
 const app = express()
 const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const store = {}
 
 const run = (config, args) => {
   const log = []
@@ -15,14 +17,13 @@ const run = (config, args) => {
   app.use(bodyParser.urlencoded({ extended: true }))
   // Config Graves
   config.graves.forEach(graveAlias => {
-    // Setup Grave store
-    const graveStore = require('store')
     // Require the module
     const graveName = `rip-grave-${graveAlias}`
     const gravePath = path.resolve(`./node_modules/${graveName}`)
     const grave = require(gravePath)
-    // Initializing Grave
-    grave.init(graveStore)
+    // Setup Grave store
+    _.set(store, graveAlias, grave.init())
+    const graveStore = _.get(store, graveAlias)
     // Apply the router to the app
     app.use(`/${graveAlias}`, grave.make(graveStore))
     // Set the main store

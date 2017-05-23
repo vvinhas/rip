@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 // Core
-// const path = require('path')
-const _ = require('lodash')
 const express = require('express')
 const app = express()
 const server = require('http').Server(app)

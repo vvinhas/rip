@@ -22,6 +22,9 @@ const run = (config, args) => {
     const grave = parseGrave(graveObj)
     // Setup Grave store
     store.addGrave(grave.alias, grave.api.init())
+    if (grave.relations) {
+      store.addGraveRelations(grave.alias, grave.relations)
+    }
     // Apply the router to the app
     const router = express.Router()
     app.use(`/${grave.alias}`, grave.api.make(router, store))

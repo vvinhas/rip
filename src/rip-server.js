@@ -8,7 +8,7 @@ const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const parseGrave = require('./parseGrave')
-const store = {}
+const store = require('./RIPStore')
 
 const run = (config, args) => {
   const log = []
@@ -21,35 +21,10 @@ const run = (config, args) => {
     // Require the module
     const grave = parseGrave(graveObj)
     // Setup Grave store
-    _.set(store, grave.alias, grave.api.init())
-    // const graveStore = _.get(store, grave.name)
+    store.addGrave(grave.alias, grave.api.init())
     // Apply the router to the app
     const router = express.Router()
-    router.use((req, res, next) => {
-      let output, type
-      const override = {
-        json: res.json.bind(res),
-        jsonp: res.jsonp.bind(res)
-      }
-
-      res.json = body => {
-        output = body
-        type = 'json'
-      }
-
-      res.jsonp = body => {
-        output = body
-        type = 'jsonp'
-      }
-
-      next()
-
-      if (type) {
-        console.log('Data:', output)
-        return override[type](output)
-      }
-    })
-    app.use(`/${grave.alias}`, grave.api.make(router, _.get(store, grave.alias)))
+    app.use(`/${grave.alias}`, grave.api.make(router, store))
     // Set the main store
     log.push(`⚰  Adding "${grave.alias}" grave`)
   })

@@ -10,7 +10,7 @@ commander
   .parse(process.argv)
 // Find and read .riprc file
 const ripFile = './.riprc'
-let config = defaultConfig
+let config
 
 try {
   const stat = fs.statSync(ripFile)
@@ -19,7 +19,7 @@ try {
     config = Object.assign({}, defaultConfig, JSON.parse(userConfig))
   }
 } catch (error) {
-  console.error(error)
+  config = defaultConfig
 }
 
 try {

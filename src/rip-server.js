@@ -14,12 +14,16 @@ const run = (config, args) => {
   app.use(cors())
   app.use(bodyParser.json())
   app.use(bodyParser.urlencoded({ extended: true }))
+  // Welcome Screen
+  app.get('/', (req, res) => {
+    res.send()
+  })
   // Config Graves
   config.graves.forEach(graveObj => {
     // Require the module
     const grave = parseGrave(graveObj)
     // Setup Grave store
-    store.addGrave(grave.alias, grave.api.init())
+    store.addGrave(grave.alias, grave.api.init(grave.fake))
     if (grave.relations) {
       store.addGraveRelations(grave.alias, grave.relations)
     }

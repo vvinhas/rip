@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Core
 const express = require('express')
+const path = require('path')
 const app = express()
 const server = require('http').Server(app)
 const cors = require('cors')
@@ -16,7 +17,7 @@ const run = (config, args) => {
   app.use(bodyParser.urlencoded({ extended: true }))
   // Welcome Screen
   app.get('/', (req, res) => {
-    res.send()
+    res.sendFile(path.join(__dirname, './index.html'))
   })
   // Config Graves
   config.graves.forEach(graveObj => {
@@ -37,7 +38,7 @@ const run = (config, args) => {
   const port = args.port ? args.port : 3001
   // Listening
   server.listen(port)
-  log.unshift(`💀  Running RIP on port ${port}`)
+  log.unshift(`💀  Running RIP on http://localhost:${port}`)
   log.forEach(entry => console.log(entry))
 }
 

@@ -13,7 +13,7 @@
   "license": "MIT",
   "scripts": {
     "lint": "eslint src test",
-    "build": "babel src --out-dir lib && chmod ug+x lib/rip-cli.js"
+    "build": "babel src --out-dir lib --copy-files && npm link"
   },
   "repository": {
     "type": "git",

@@ -115,11 +115,74 @@ Save the file and head to `GET /todos/all` and you should see a list with 10 tod
 
 RIP allows you to relate some data with other graves and that unleashes a very powerful feature. Since graves are created by the community, it's essential that they can communicate. The way this takes place, is by setting relationship across properties.
 
-_continue..._
+Let's add the `users` grave:
+
+```
+yarn add rip-grave-users
+```
+
+Now, let's instruct RIP to use it
+
+```json
+{
+    "graves": [
+        "users",
+        { "name": "todos", "fake": 10 }
+    ]
+}
+```
+
+As you can see, you can mix and match grave notations. RIP is smart enough to identify which one you're using.
+
+Each Todo object provides a prop called `author` that we want to associate with a user from the `users` grave.
+
+Let's setup this relationship now:
+
+```json
+{
+    "graves": [
+        { "name": "users", "fake": 5 },
+        {
+            "name": "todos",
+            "relations": [
+                { "collection": "data", "prop": "author", "mapsTo": "users.data", "field": "_id" }
+            ]
+        }
+    ]
+}
+```
+
+_Hmm... That sounds complicated..._
+
+It's not. Trust me!
+
+It works like a lookup table. You can read the statement like this:
+
+> In my Todo grave, go to the `data` collection and map each `author` prop to the collection `users.data`, field `_id`"
+
+Now make a request to `GET /users/all` and copy one of the users `_id`. Create a new todo the way we did before and set the `author` prop to the User ID you've copied. head to `GET /todos/all` and _Voilà!_
+
+For more details, see the table bellow.
+
+| Field | Description |
+| --- | --- |
+| `collection` | A path that corresponds to a valid _Collection_ from the grave you'r in. Remember to check the grave repository to see the shape of it's _Store_ |
+| `prop` | Name of the property to lookup in the `collection` |
+| `mapsTo` | A path to _RIP Store_ that corresponds to a valid _Collection_. In this section, you have access to the whole _RIP Store_. Usually, the first node of the path is the name of the grave you want to reference, followed by a valid path to it's _Store_. In the examplea bove, we used the `users.data` collection |
+| `field` | Name of the property in the `mapsTo` _Collection_ that reference to the `collection.prop` |
+
+You can create multiple relations for each property in a grave collection.
+
+Always remember to check the grave repository for details about it's Store shape.
 
 ## Creating Graves
 
 We encourage you to create your own graves and share with everyone or create a particular grave for your project only. It's totally up to you!
 
 ### Basic Structure
+
+_soon..._
+
 ### Options
+
+_soon..._

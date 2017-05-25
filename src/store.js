@@ -1,4 +1,4 @@
-const { Map, fromJS, toJS } = require('immutable')
+const { Map, List, fromJS } = require('immutable')
 
 class Store {
   constructor () {
@@ -49,12 +49,21 @@ class Store {
         if (!this._isRelationShapeValid(relation)) {
           throw new Error('Invalid shape for relation ' + relation)
         }
-
-        const collection = this._store
-          .get(grave)
-          .getIn(relation.collection)
-
-        console.log('Collection', collection)
+        
+        const path = `${grave}.${relation.collection}`.split('.')
+        const collection = data.getIn(path)
+        const lookupPath = relation.mapsTo.split('.')
+        const lookupCollection = data.getIn(lookupPath)
+        
+        if (List.isList(collection) && List.isList(lookupCollection)) {
+          data = data.setIn(path, collection.map(item => {
+            const transformed = lookupCollection.find(lookupItem => lookupItem[relation.field] === item[relation.prop])
+            if (transformed) {
+              item = item.set(relation.prop, transformed)
+            }
+            return item
+          }))
+        }
         // const collection = _.get(data, relation.collection)
         // if (_.isArray(collection)) {
         //   collection.forEach(row => {
@@ -71,8 +80,10 @@ class Store {
     return data
   }
 
-  getGraveStore (grave) {
-    return this._store.get(grave).toJS()
+  getGraveStore(grave) {
+    return this._transform(grave, this._store)
+      .get(grave)
+      .toJS()
   }
 
   graveStoreUpdater (grave) {

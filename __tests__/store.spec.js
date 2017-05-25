@@ -37,7 +37,7 @@ describe('Store', () => {
 
   it('Updates a grave store through an updater function', () => {
     const updater = store.graveStoreUpdater('todos')
-    todosStore.data.push({ _id: 2, text: 'Adding new Todo', completed: false })
+    todosStore.data.push({ _id: 2, author: 1, text: 'Adding new Todo', completed: false })
     updater(todosStore)
     expect(store.getGraveStore('todos')).toEqual(todosStore)
   })
@@ -45,13 +45,16 @@ describe('Store', () => {
   it('Transform data based on grave relations', () => {
     store.addGraveStore('users', usersStore)
     store.addGraveRelations('todos', todosRelations)
-    const transformedData = todosStore.data.map(todo => {
-      const author = usersStore.data.find(user => user._id === todo.author)
-      if (author) {
-        todo.author = author
-      }
-      return todo
-    })
-    expect(store.getGraveStore('todos')).toEqual(transformedData)
+    const newTodosStore = {
+      ...todosStore,
+      data: todosStore.data.map(todo => {
+        const author = usersStore.data.find(user => user._id === todo.author)
+        if (author) {
+          todo.author = author
+        }
+        return todo
+      })
+    }
+    expect(store.getGraveStore('todos')).toEqual(newTodosStore)
   })
 })

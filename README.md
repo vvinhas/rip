@@ -5,7 +5,7 @@ REST In Peace is a dead simple composable API for testing purposes
 
 How many times you needed an API for testing simple apps or maybe just to learn something new and you had to Google for some public APIs to fetch some random stuff that doesn't actually help.
 
-Or maybe worst! You wanted to share your project with coleagues or collaborators but you need an API to make it work! You either develop a simple backend to run along with your app or setup a Firebase account, maybe Deployd, configure SDKs, setup endpoints; damn _(language!)_, you just wanted them to see it working...
+Or maybe you just want to share your project with coleagues or collaborators but you need an API to make it work! You either develop a simple backend to run along with your app or setup a Firebase account, maybe Deployd, configure SDKs, setup endpoints; damn _(language!)_, you just want them to see it working...
 
 ### RIP for the rescue! 
 
@@ -27,7 +27,7 @@ If you prefer, you can also use Yarn
 yarn global add rip-server
 ```
 
-To check if everything is working fine, run the command `rip` on your terminal. You should see a status message telling you that RIP is running and an URL (`http://localhost:3001` by default). Pate the URL in your browser to check.
+Now, run the command `rip` on your terminal. You should see a status message telling you that RIP is running and an URL (`http://localhost:3001` by default). Paste the URL in your browser to check if everything is working fine.
 
 ## Usage
 
@@ -85,7 +85,7 @@ We'll see that in a moment!
 
 Now it's a good time to checkout the [rip-grave-todos]() repository. Each grave has a detailed README file explaining it's endpoints and what they can do.
 
-You can add a todo by making a `POST` request to `/todos` sending the data `{ author: 'vvinhas', text: 'Buy eggs' }`. Do that using the tool of your choice and head back to `GET /todos/all`.
+You can add a todo by making a `POST` request to `/todos` sending the data `{ author: 'admin@localhost', text: 'Buy eggs' }`. Do that using the tool of your choice and head back to `GET /todos/all`.
 
 _Tcharam!_
 
@@ -180,6 +180,10 @@ Always remember to check the grave repository for details about it's Store shape
 We encourage you to create your own graves and share with everyone or create a particular grave for your project only. It's totally up to you!
 
 ### Basic Structure
+
+_soon..._
+
+### The Store
 
 _soon..._
 

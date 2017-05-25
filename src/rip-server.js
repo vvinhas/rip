@@ -7,10 +7,12 @@ const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
 const parseGrave = require('./parseGrave')
-const store = require('./RIPStore')
+const store = require('immutable')
 
 const run = (config, args) => {
   const log = []
+  // Setup main store
+  store.fromJS({})
   // Setting some middlewares
   app.use(cors())
   app.use(bodyParser.json())
@@ -24,13 +26,14 @@ const run = (config, args) => {
     // Require the module
     const grave = parseGrave(graveObj)
     // Setup Grave store
-    store.addGrave(grave.alias, grave.api.init(grave.fake))
+    store.set(grave.alias, grave.api.init(grave.fake))
+    // Check for Grave relations
     if (grave.relations) {
-      store.addGraveRelations(grave.alias, grave.relations)
+      store.setIn(`relations.${grave.alias}`, grave.relations)
     }
     // Apply the router to the app
     const router = express.Router()
-    app.use(`/${grave.alias}`, grave.api.make(router, store))
+    app.use(`/${grave.alias}`, grave.api.make(router, store.get(grave.alias)))
     // Set the main store
     log.push(`⚰  Adding "${grave.alias}" grave`)
   })

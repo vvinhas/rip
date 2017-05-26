@@ -57,9 +57,22 @@ const Store = () => {
     return _transform(grave, store)
   }
 
+  function createGraveStateGetter(grave) {
+    return () => {
+      return getGraveState(grave)
+    }
+  }
+
   function createGraveStateUpdater(grave) {
     return newState => {
       setGraveState(grave, newState)
+    }
+  }
+
+  function createGraveStore(grave) {
+    return {
+      getState: createGraveStateGetter(grave),
+      updateState: createGraveStateUpdater(grave)
     }
   }
 
@@ -67,7 +80,7 @@ const Store = () => {
     getGraveState,
     setGraveState,
     setGraveRelations,
-    createGraveStateUpdater
+    createGraveStore
   }
 }
 

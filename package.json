@@ -14,7 +14,7 @@
   "scripts": {
     "test": "jest",
     "lint": "eslint src test",
-    "build": "babel src --out-dir lib --copy-files && npm link"
+    "build": "babel src --out-dir lib --copy-files"
   },
   "repository": {
     "type": "git",

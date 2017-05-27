@@ -7,95 +7,78 @@ const Store = () => {
   function _isRelationshipValid(relationship) {
     const [...props] = relationship.keys()
     const shape = ['field', 'mustReference', 'mustEmbed']
-    const valid = shape.filter(prop => props.indexOf(prop) > 0)
-
-    return valid.length === 2 && relationship['field']
+    const valid = shape.filter(prop => props.indexOf(prop) >= 0)
+    
+    return (valid.length === 2 && relationship.get('field'))
   }
 
   function _parseRelationship(relationship) {
     let pathFrom, pathTo, fieldFrom, fieldTo, type
     
-    pathFrom = relationship.field.split('.')
+    pathFrom = relationship.get('field').split('.')
     fieldFrom = pathFrom.pop()
-    if (relationship.mustEmbed) {
+    if (relationship.get('mustEmbed')) {
       type = "embed"
-      pathTo = relationship.mustEmbed.split('.')
+      pathTo = relationship.get('mustEmbed').split('.')
     } else {
       type = "reference"
-      pathTo = relationship.mustReference.split('.')
+      pathTo = relationship.get('mustReference').split('.')
     }
     fieldTo = pathTo.pop()
     
     return { type, pathFrom, fieldFrom, pathTo, fieldTo }
   }
 
-  function _embed(grave, state) {
-    relationships.get(grave).forEach(relationship => {
-      if (_isRelationshipValid(relationship)) {
-        const rel = _parseRelationship(relationship)
-        if (rel.type === 'embed') {
-          // 
-        }
-      }
-    })
-  }
-
-  function _reference(grave, state) {
-    relationships.get(grave).forEach(relationship => {
-      if (_isRelationshipValid(relationship)) {
-        const rel = _parseRelationship(relationship)
-        if (rel.type === 'reference') {
-          // 
-        }
-      }
-    })
-  }
-
-  function _transform(grave, state) {
-    // Get the relations of a grave
-    const graveRelations = relations.get(grave)
-    // If there's any
-    if (graveRelations) {
-      // Iterates through each relation
-      graveRelations.forEach(relation => {
-        // Checks if the relation has a valid shape
-        if (!_isRelationShapeValid(relation)) {
-          throw new Error(`Invalid shape for relation ${relation}`)
-        }
-        // Get the collections
-        const path = [grave, ...relation.get('collection').split('.')]
-        const collection = state.getIn(path)
-        const lookupPath = relation.get('mapsTo').split('.')
-        const lookupCollection = state.getIn(lookupPath)
-        // Check if both collections are of the List type
-        if (List.isList(collection) && List.isList(lookupCollection)) {
-          // Updates the grave state, associating each relation
-          state = state.setIn(path, collection.map(item => {
-            const transformed = lookupCollection.find(lookupItem => lookupItem.get(relation.get('field')) === item.get(relation.get('prop')))
-            if (transformed) {
-              item = item.set(relation.get('prop'), transformed)
-            }
-            return item
-          }))
+  function _transform(grave, newState) {
+    // First, change Grave store to state
+    let newStore = store.set(grave, newState)
+    if (relationships.has(grave)) {
+      relationships.get(grave).forEach(relationship => {
+        if (_isRelationshipValid(relationship)) {
+          const rel = _parseRelationship(relationship)
+          if (rel.type === 'embed') {
+            // Dive into the origin collection...
+            newStore = newStore.updateIn([grave, ...rel.pathFrom], collection => {
+              // If collection isn't a list, return itself
+              if (!List.isList(collection)) {
+                return collection
+              }
+              // Maps collection
+              return collection.map(documentFrom => {
+                if (Map.isMap(documentFrom.get(rel.fieldFrom))) {
+                  return documentFrom
+                }
+                // Return the document if there's a match
+                const match = newStore.getIn(rel.pathTo).find(documentTo => {
+                  return documentTo.get(rel.fieldTo) === documentFrom.get(rel.fieldFrom)
+                })
+                // If there's a match, embed the result in the field
+                return match ? documentFrom.set(rel.fieldFrom, match) : documentFrom
+              })
+            })
+          }
         }
       })
     }
-
-    return state.get(grave)
+    return newStore
   }
-
-  function setGraveState(grave, state) {
-    store = store.set(grave, state)
-  }
-
-  function setGraveRelations(grave, graveRelations) {
-    relations = relations.set(grave, graveRelations)
+  
+  function setGraveState(grave, newState) {
+    store = _transform(grave, newState)
   }
 
   function getGraveState(grave) {
-    return _transform(grave, store)
+    return store.get(grave)
   }
 
+  function setGraveRelationships(grave, graveRelationships) {
+    relationships = relationships.set(grave, graveRelationships)
+  }
+
+  function getGraveRelationships(grave) {
+    return relationships.get(grave)
+  }
+  
   function createGraveStateGetter(grave) {
     return () => {
       return getGraveState(grave)
@@ -118,7 +101,8 @@ const Store = () => {
   return {
     getGraveState,
     setGraveState,
-    setGraveRelations,
+    getGraveRelationships,
+    setGraveRelationships,
     createGraveStore
   }
 }

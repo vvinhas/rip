@@ -2,36 +2,52 @@ const { Map, List } = require('immutable')
 
 const Store = () => {
   let store = Map({})
-  let relations = Map({})
+  let relationships = Map({})
 
-  function _isRelationShapeValid(relation) {
-    const [...props] = relation.keys()
+  function _isRelationshipValid(relationship) {
+    const [...props] = relationship.keys()
     const shape = ['field', 'mustReference', 'mustEmbed']
     const valid = shape.filter(prop => props.indexOf(prop) > 0)
 
-    return valid.length === 2 && relation['field']
+    return valid.length === 2 && relationship['field']
   }
 
-  function _parseRelation(relation) {
+  function _parseRelationship(relationship) {
     let pathFrom, pathTo, fieldFrom, fieldTo, type
     
-    pathFrom = relation.field.split('.')
+    pathFrom = relationship.field.split('.')
     fieldFrom = pathFrom.pop()
-    if (relation.mustEmbed) {
+    if (relationship.mustEmbed) {
       type = "embed"
-      pathTo = relation.mustEmbed.split('.')
+      pathTo = relationship.mustEmbed.split('.')
     } else {
       type = "reference"
-      pathTo = relation.mustReference.split('.')
+      pathTo = relationship.mustReference.split('.')
     }
     fieldTo = pathTo.pop()
     
     return { type, pathFrom, fieldFrom, pathTo, fieldTo }
   }
 
-  function _transformed(grave, state) {
-    relations.get(grave).forEach(relation => {
-      
+  function _embed(grave, state) {
+    relationships.get(grave).forEach(relationship => {
+      if (_isRelationshipValid(relationship)) {
+        const rel = _parseRelationship(relationship)
+        if (rel.type === 'embed') {
+          // 
+        }
+      }
+    })
+  }
+
+  function _reference(grave, state) {
+    relationships.get(grave).forEach(relationship => {
+      if (_isRelationshipValid(relationship)) {
+        const rel = _parseRelationship(relationship)
+        if (rel.type === 'reference') {
+          // 
+        }
+      }
     })
   }
 

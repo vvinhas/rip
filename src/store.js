@@ -6,10 +6,33 @@ const Store = () => {
 
   function _isRelationShapeValid(relation) {
     const [...props] = relation.keys()
-    const shape = ['collection', 'prop', 'mapsTo', 'field']
+    const shape = ['field', 'mustReference', 'mustEmbed']
     const valid = shape.filter(prop => props.indexOf(prop) > 0)
 
-    return valid.length > 0
+    return valid.length === 2 && relation['field']
+  }
+
+  function _parseRelation(relation) {
+    let pathFrom, pathTo, fieldFrom, fieldTo, type
+    
+    pathFrom = relation.field.split('.')
+    fieldFrom = pathFrom.pop()
+    if (relation.mustEmbed) {
+      type = "embed"
+      pathTo = relation.mustEmbed.split('.')
+    } else {
+      type = "reference"
+      pathTo = relation.mustReference.split('.')
+    }
+    fieldTo = pathTo.pop()
+    
+    return { type, pathFrom, fieldFrom, pathTo, fieldTo }
+  }
+
+  function _transformed(grave, state) {
+    relations.get(grave).forEach(relation => {
+      
+    })
   }
 
   function _transform(grave, state) {

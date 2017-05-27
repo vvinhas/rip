@@ -29,6 +29,32 @@ const Store = () => {
     return { type, pathFrom, fieldFrom, pathTo, fieldTo }
   }
 
+  function _transformEmbed(grave, data, params) {
+    // Dive into the origin collection...
+    return data.updateIn([grave, ...params.pathFrom], collection => {
+      // If collection isn't a list, return itself
+      if (!List.isList(collection)) {
+        return collection
+      }
+      // Maps collection
+      return collection.map(documentFrom => {
+        if (Map.isMap(documentFrom.get(params.fieldFrom))) {
+          return documentFrom
+        }
+        // Return the document if, params there's a match
+        const match = data.getIn(params.pathTo).find(documentTo => {
+          return documentTo.get(params.fieldTo) === documentFrom.get(params.fieldFrom)
+        })
+        // If there's a match, embed the result in the field
+        return match ? documentFrom.set(params.fieldFrom, match) : documentFrom
+      })
+    })
+  }
+
+  function _transformReference(grave, data, params) {
+    
+  }
+  
   function _transform(grave, newState) {
     // First, change Grave store to state
     let newStore = store.set(grave, newState)
@@ -37,25 +63,9 @@ const Store = () => {
         if (_isRelationshipValid(relationship)) {
           const rel = _parseRelationship(relationship)
           if (rel.type === 'embed') {
-            // Dive into the origin collection...
-            newStore = newStore.updateIn([grave, ...rel.pathFrom], collection => {
-              // If collection isn't a list, return itself
-              if (!List.isList(collection)) {
-                return collection
-              }
-              // Maps collection
-              return collection.map(documentFrom => {
-                if (Map.isMap(documentFrom.get(rel.fieldFrom))) {
-                  return documentFrom
-                }
-                // Return the document if there's a match
-                const match = newStore.getIn(rel.pathTo).find(documentTo => {
-                  return documentTo.get(rel.fieldTo) === documentFrom.get(rel.fieldFrom)
-                })
-                // If there's a match, embed the result in the field
-                return match ? documentFrom.set(rel.fieldFrom, match) : documentFrom
-              })
-            })
+            newStore = _transformEmbed(grave, newStore, rel)
+          } else {
+            newStore = _transformReference(grave, newStore, rel)
           }
         }
       })

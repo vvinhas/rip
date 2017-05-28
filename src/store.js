@@ -52,12 +52,41 @@ const Store = () => {
   }
 
   function _transformReference(grave, data, params) {
-    
+    const { fieldFrom, fieldTo, pathFrom, pathTo } = params
+
+    return data.updateIn([grave, ...pathFrom], collection => {
+      if (collection.has('docs')) {
+        collection = collection.get('docs')
+      }
+
+      const findRefs = () => {
+        let refs = Map({})
+        collection.forEach(doc => {
+          const match = data.getIn([...pathTo]).find(value => value.get(fieldTo) === doc.get(fieldFrom))
+          if (match) {
+            if (refs.has(fieldFrom)) {
+              // Verifica se já consta nas referências
+              if (refs.get(fieldFrom).includes(match)) {
+                return
+              }
+              refs = refs.update(fieldFrom, refs => refs.push(match))
+            }
+            refs = refs.set(fieldFrom, List([match]))
+          }
+        })
+        return refs
+      }      
+
+      return Map({
+        docs: collection,
+        refs: findRefs()
+      })
+    })
   }
   
-  function _transform(grave, newState) {
-    // First, change Grave store to state
-    let newStore = store.set(grave, newState)
+  function _transform(grave) {
+    let newStore = store
+
     if (relationships.has(grave)) {
       relationships.get(grave).forEach(relationship => {
         if (_isRelationshipValid(relationship)) {
@@ -70,15 +99,16 @@ const Store = () => {
         }
       })
     }
-    return newStore
+    
+    return newStore.get(grave)
   }
   
-  function setGraveState(grave, newState) {
-    store = _transform(grave, newState)
+  function setGraveState(grave, state) {
+    store = store.set(grave, state)
   }
 
   function getGraveState(grave) {
-    return store.get(grave)
+    return _transform(grave, store)
   }
 
   function setGraveRelationships(grave, graveRelationships) {

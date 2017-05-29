@@ -1,8 +1,7 @@
 const { Map, List } = require('immutable')
 
 const Store = () => {
-  let store = Map({})
-  let relationships = Map({})
+  let graves = {}
 
   function _isRelationshipValid(relationship) {
     const [...props] = relationship.keys()
@@ -13,7 +12,11 @@ const Store = () => {
   }
 
   function _parseRelationship(relationship) {
-    let pathFrom, pathTo, fieldFrom, fieldTo, type
+    let type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo
+
+    if (!_isRelationshipValid(relationship)) {
+      throw new Error('Wrong relationship declaration.')
+    }
     
     pathFrom = relationship.get('field').split('.')
     fieldFrom = pathFrom.pop()
@@ -24,9 +27,120 @@ const Store = () => {
       type = "reference"
       pathTo = relationship.get('mustReference').split('.')
     }
+    graveTo = pathTo.shift()
     fieldTo = pathTo.pop()
     
-    return { type, pathFrom, fieldFrom, pathTo, fieldTo }
+    return { type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo }
+  }
+
+  function grave(initialState) {
+    let state = initialState
+    let relationships = Map({})
+
+    const setState = (newState) => {
+      state = newState
+    }
+    const setRelationships = (rels) => {
+      relationships = rels.map(rel => _parseRelationship(rel))
+    }
+    const getState = () => state
+    const getRelationships = () => relationships
+    const output = () => {
+      let output = state
+      
+      if (relationships) {
+        relationships.forEach(rel => {
+          const graveTo = graves[rel.graveTo]
+          // If there's no grave defined, continue the loop...
+          if (!graveTo) {
+            return
+          }
+          // Test for relationship type
+          switch (rel.type) {
+            // Embed type
+            case 'embed':
+              output = output.updateIn([...rel.pathFrom], docsFrom => {
+                if (!List.isList(docsFrom)) {
+                  return docsFrom
+                }
+
+                return docsFrom.map(docFrom => {
+                  if (Map.isMap(docFrom.get(rel.fieldFrom))) {
+                    return docFrom
+                  }
+                  // Return the document if, params there's a match
+                  if (graveTo) {
+                    const match = graveTo.getState().getIn([...rel.pathTo]).find(docTo => {
+                      return docTo.get(rel.fieldTo) === docFrom.get(rel.fieldFrom)
+                    })
+                    // If there's a match, embed the result in the field
+                    return match ? docFrom.set(rel.fieldFrom, match) : docFrom
+                  }
+                  return docFrom
+                })
+              })
+            // Reference type
+            case 'reference':
+              /*  
+              return data.updateIn([grave, ...pathFrom], collection => {
+                let newCollection = collection
+                if (collection.has('docs')) {
+                  newCollection = collection.get('docs')
+                }
+
+                const findRefs = () => {
+                  let refs = Map({})
+                  newCollection.forEach(doc => {
+                    const match = data.getIn([...pathTo]).find(value => {
+                      value.get(fieldTo) === doc.get(fieldFrom)
+                    })
+                    console.log('Match:', match)
+                    if (match) {
+                      if (refs.has(fieldFrom)) {
+                        // Verifica se já consta nas referências
+                        if (refs.get(fieldFrom).includes(match)) {
+                          return
+                        }
+                        refs = refs.update(fieldFrom, refs => refs.push(match))
+                      }
+                      refs = refs.set(fieldFrom, List([match]))
+                    }
+                  })
+                  return refs
+                }      
+                
+                return Map({
+                  docs: newCollection,
+                  refs: findRefs()
+                })
+              })
+              */
+              return
+          }
+        })
+      }
+      return output
+    }
+
+    const accessCreator = () => ({
+      setState,
+      getState,
+      output
+    })
+
+    return {
+      getState,
+      setState,
+      getRelationships,
+      setRelationships,
+      output,
+      accessCreator
+    }
+  }
+  
+  const createGrave = (graveName, initialState) => {
+    graves[graveName] = grave(initialState)
+    return graves[graveName]
   }
 
   function _transformEmbed(grave, data, params) {
@@ -55,14 +169,18 @@ const Store = () => {
     const { fieldFrom, fieldTo, pathFrom, pathTo } = params
 
     return data.updateIn([grave, ...pathFrom], collection => {
+      let newCollection = collection
       if (collection.has('docs')) {
-        collection = collection.get('docs')
+        newCollection = collection.get('docs')
       }
 
       const findRefs = () => {
         let refs = Map({})
-        collection.forEach(doc => {
-          const match = data.getIn([...pathTo]).find(value => value.get(fieldTo) === doc.get(fieldFrom))
+        newCollection.forEach(doc => {
+          const match = data.getIn([...pathTo]).find(value => {
+            value.get(fieldTo) === doc.get(fieldFrom)
+          })
+          console.log('Match:', match)
           if (match) {
             if (refs.has(fieldFrom)) {
               // Verifica se já consta nas referências
@@ -76,9 +194,9 @@ const Store = () => {
         })
         return refs
       }      
-
+      
       return Map({
-        docs: collection,
+        docs: newCollection,
         refs: findRefs()
       })
     })
@@ -139,6 +257,8 @@ const Store = () => {
   }
 
   return {
+    grave,
+    createGrave,
     getGraveState,
     setGraveState,
     getGraveRelationships,

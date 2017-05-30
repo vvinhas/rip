@@ -19,9 +19,14 @@ const parseGrave = grave => {
     _.has(grave, 'name')) {
     // Create some useful props
     alias = grave.name
-    name = `rip-grave-${alias}`
-    api = require(path.resolve(`./node_modules/${name}`))
     fake = (typeof grave.fake === 'number' && grave.fake % 1 === 0) ? grave.fake : 0
+    if (_.has(grave, 'mapsTo')) {
+      name = `custom-grave-${alias}`
+      api = require(path.resolve(grave.mapsTo))
+    } else {
+      name = `rip-grave-${alias}`
+      api = require(path.resolve(`./node_modules/${name}`))
+    }
 
     return { ...grave, name, alias, api, fake }
   }

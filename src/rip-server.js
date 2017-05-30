@@ -25,16 +25,16 @@ const run = (config, args) => {
     // Require the module
     const grave = parseGrave(graveObj)
     // Setup Grave store
-    store.setGraveState(grave.alias, fromJS(grave.api.init(grave.fake)))
+    const graveStore = store.createGrave(grave.alias, fromJS(grave.api.init(grave.fake)))
     // Check for Grave relations
-    if (grave.relations) {
-      store.setGraveRelations(grave.alias, fromJS(grave.relations))
+    if (grave.relationships) {
+      graveStore.setRelationships(grave.relationships)
     }
     // Apply the router to the app
     const router = express.Router()
     app.use(`/${grave.alias}`, grave.api.make(
       router,
-      store.createGraveStore(grave.alias)
+      graveStore.accessCreator()
     ))
     // Set the main store
     log.push(`⚰  Adding "${grave.alias}" grave`)

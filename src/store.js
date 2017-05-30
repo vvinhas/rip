@@ -4,11 +4,11 @@ const Store = () => {
   let graves = {}
 
   function _isRelationshipValid(relationship) {
-    const [...props] = relationship.keys()
+    const [...props] = Object.keys(relationship)
     const shape = ['field', 'belongsTo', 'hasMany']
     const valid = shape.filter(prop => props.indexOf(prop) >= 0)
     
-    return (valid.length === 2 && relationship.get('field'))
+    return (valid.length === 2 && relationship.field)
   }
 
   function _parseRelationship(relationship) {
@@ -18,15 +18,15 @@ const Store = () => {
       throw new Error('Wrong relationship declaration.')
     }
     
-    pathFrom = relationship.get('field').split('.')
+    pathFrom = relationship.field.split('.')
     fieldFrom = pathFrom.pop()
 
-    if (relationship.get('belongsTo')) {
-      type = "belongsTo"
-      pathTo = relationship.get('belongsTo').split('.')
+    if (relationship.belongsTo) {
+      type = 'belongsTo'
+      pathTo = relationship.belongsTo.split('.')
     } else {
-      type = "hasMany"
-      pathTo = relationship.get('hasMany').split('.')
+      type = 'hasMany'
+      pathTo = relationship.hasMany.split('.')
     }
     graveTo = pathTo.shift()
     fieldTo = pathTo.pop()
@@ -56,7 +56,6 @@ const Store = () => {
           if (!graveTo) {
             return
           }
-
           // Test for relationship type
           switch (rel.type) {
             case 'belongsTo':
@@ -70,14 +69,15 @@ const Store = () => {
                     return docFrom
                   }
                   // Return the document if, params there's a match
-                  const match = graveTo.getState().getIn([...rel.pathTo]).find(docTo => {
-                    return docTo.get(rel.fieldTo) === docFrom.get(rel.fieldFrom)
-                  })
+                  const match = graveTo.getState()
+                    .getIn([...rel.pathTo])
+                    .find(docTo => docTo.get(rel.fieldTo) === docFrom.get(rel.fieldFrom))
                   // If there's a match, embed the result in the field
                   return match ? docFrom.set(rel.fieldFrom, match) : docFrom
                 })
               })
               break
+
             case 'hasMany':
               output = output.updateIn([...rel.pathFrom], docsFrom => {
                 if (!List.isList(docsFrom)) {

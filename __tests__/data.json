@@ -1,0 +1,64 @@
+{
+  "books": {
+    "data": [{
+        "_id": 1,
+        "name": "The Pragmatic Programmer: From Journeyman to Master",
+        "authors": [1, 2],
+        "publisher": "addison"
+      },
+      {
+        "_id": 2,
+        "name": "Design Patterns: Elements of Reusable Object-Oriented Software",
+        "authors": [3, 4, 5, 6],
+        "publisher": "addison"
+      }
+    ]
+  },
+  "persons": {
+    "data": [{
+        "_id": 1,
+        "name": "Andrew Hunt"
+      },
+      {
+        "_id": 2,
+        "name": "Dave Thomas"
+      },
+      {
+        "_id": 3,
+        "name": "Erich Gamma"
+      },
+      {
+        "_id": 4,
+        "name": "Ralph Johnson"
+      },
+      {
+        "_id": 5,
+        "name": "John Vlissides"
+      },
+      {
+        "_id": 6,
+        "name": "Richard Helm"
+      }
+    ]
+  },
+  "orgs": {
+    "data": [{
+      "_id": 1,
+      "label": "addison",
+      "name": "Addison-Wesley Professional"
+    }]
+  },
+  "config": {
+    "books": {
+      "relationships": [{
+          "field": "data.authors",
+          "hasMany": "persons.data._id"
+        },
+        {
+          "field": "data.publisher",
+          "belongsTo": "orgs.data.label"
+        }
+      ]
+    }
+  }
+}

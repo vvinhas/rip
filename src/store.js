@@ -2,7 +2,10 @@ const { Map, List } = require('immutable')
 
 const Store = () => {
   let graves = {}
-
+  /**
+   * Checks whether the relationship object is valid
+   * @param {object} relationship Relationship raw object
+   */
   function _isRelationshipValid(relationship) {
     const [...props] = Object.keys(relationship)
     const shape = ['field', 'belongsTo', 'hasMany']
@@ -10,7 +13,10 @@ const Store = () => {
     
     return (valid.length === 2 && relationship.field)
   }
-
+  /**
+   * Parse the relationship JSON to a readable object
+   * @param {object} relationship 
+   */
   function _parseRelationship(relationship) {
     let type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo
 
@@ -33,7 +39,10 @@ const Store = () => {
     
     return { type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo }
   }
-
+  /**
+   * Creates a Store used by a grave
+   * @param {*} initialState Initial State
+   */
   function grave(initialState) {
     let state = initialState
     let relationships = Map({})
@@ -56,9 +65,13 @@ const Store = () => {
           if (!graveTo) {
             return
           }
-          // Test for relationship type
+          
           switch (rel.type) {
+            // BelongsTo relationships search for documents in the Store
+            // and try to find a match based on the fields declared in a relationship
+            // If there's a match, the value is then replaced by the document found
             case 'belongsTo':
+              // Embed the related document
               output = output.updateIn([...rel.pathFrom], docsFrom => {
                 if (!List.isList(docsFrom)) {
                   return docsFrom
@@ -77,7 +90,10 @@ const Store = () => {
                 })
               })
               break
-
+            // HasMany relationships try to find a match in another Store
+            // that corresponds to values inside a List, based on the 
+            // field declared in the relationship.
+            // It keeps doing that for each value inside the List.
             case 'hasMany':
               output = output.updateIn([...rel.pathFrom], docsFrom => {
                 if (!List.isList(docsFrom)) {
@@ -120,7 +136,11 @@ const Store = () => {
       accessCreator
     }
   }
-  
+  /**
+   * Create a new grave and its Store
+   * @param {string} graveName 
+   * @param {*} initialState 
+   */
   const createGrave = (graveName, initialState) => {
     graves[graveName] = grave(initialState)
     return graves[graveName]

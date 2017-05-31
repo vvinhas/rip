@@ -1,0 +1,50 @@
+body, html
+  height: 100%
+
+@keyframes animatedBackground
+  from { background-position: 0 0 }
+  to { background-position: 100% 0 }
+
+body
+  font-family: Monaco, Consolas, monospace
+  animation: animatedBackground 40s linear infinite
+  background-repeat: repeat
+  background-image: url(../img/bg.png)
+
+.Container
+  display: flex
+  flex-direction: column
+  justify-content: center
+  align-items: center
+
+  h1
+    font-size: 234%
+    color: #ecf0f1
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1)
+
+  &__graves
+    flex: 1
+    width: 500px
+
+    h2.subtitle
+      color: #34495e
+      text-align: center
+
+    ul
+      list-style: none
+
+      li
+        display: flex
+        align-items: center
+        justify-content: space-between
+        box-sizing: border-box
+        padding: 14px
+        background-color: #ecf0f1
+        border-bottom: solid 1px #bdc3c7
+        color: #333
+
+        small
+          font-size: 12px
+
+        a
+          color: #2980b9

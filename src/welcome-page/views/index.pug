@@ -1,0 +1,24 @@
+html
+  head
+    title RIP - REST In Peace
+    link(href='css/stylesheet.css' rel='stylesheet')
+
+  body
+    .Container
+      h1 You can REST in peace 💀
+      
+      .Container__graves
+        h2.subtitle Graves Available
+        ul
+          each grave in graves
+            li
+              if grave.name.startsWith('rip-grave')
+                strong= grave.alias
+                |
+                |
+                small
+                  a(href='https://www.npmjs.com/package/'+grave.name)= grave.name
+              else
+                strong= grave.alias
+                small
+                  em custom

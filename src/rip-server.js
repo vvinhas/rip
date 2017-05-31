@@ -6,25 +6,29 @@ const app = express()
 const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
-const parseGrave = require('./parseGrave')
+// const pug = require('pug')
+const graveParser = require('./graveParser')
 const store = require('./store')
 const { fromJS } = require('immutable')
 
 const run = (config, args) => {
   const log = []
+  let gravesAvailable = []
+
   // Setting some middlewares
   app.use(cors())
   app.use(bodyParser.json())
   app.use(bodyParser.urlencoded({ extended: true }))
-  // Welcome Screen
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './index.html'))
-  })
+  app.use(express.static(path.join(__dirname, './welcome-page/public')))
+  // Template Engine
+  app.set('views', path.join(__dirname, './welcome-page/views'))
+  app.set('view engine', 'pug')
   // Config Graves
   config.graves.forEach(graveObj => {
-    // Require the module
-    const grave = parseGrave(graveObj)
-    // Setup Grave store
+    // Parse the information captured for each grave
+    const grave = graveParser(graveObj)
+    gravesAvailable.push({ ...grave })
+    // Setup the Grave Store
     const graveStore = store.createGrave(grave.alias, fromJS(grave.api.init(grave.fake)))
     // Check for Grave relations
     if (grave.relationships) {
@@ -38,6 +42,10 @@ const run = (config, args) => {
     ))
     // Set the main store
     log.push(`⚰  Adding "${grave.alias}" grave`)
+  })
+  // Welcome Page
+  app.get('/', (req, res) => {
+    res.render('index', { graves: gravesAvailable })
   })
   // Port Settings
   const port = args.port ? args.port : 3001

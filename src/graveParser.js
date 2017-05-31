@@ -4,7 +4,7 @@ const _ = require('lodash')
  * Parse Grave information
  * @param {object} grave
  */
-const parseGrave = grave => {
+const graveParser = grave => {
   let name, alias, api, fake
 
   if (_.isString(grave)) {
@@ -34,4 +34,4 @@ const parseGrave = grave => {
   throw new Error('Invalid grave setup')
 }
 
-module.exports = parseGrave
+module.exports = graveParser

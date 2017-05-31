@@ -1,0 +1,80 @@
+body,
+html {
+  height: 100%;
+}
+body {
+  font-family: Monaco, Consolas, monospace;
+  animation: animatedBackground 40s linear infinite;
+  background-repeat: repeat;
+  background-image: url("../img/bg.png");
+}
+.Container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.Container h1 {
+  font-size: 234%;
+  color: #ecf0f1;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.1);
+}
+.Container__graves {
+  flex: 1;
+  width: 500px;
+}
+.Container__graves h2.subtitle {
+  color: #34495e;
+  text-align: center;
+}
+.Container__graves ul {
+  list-style: none;
+}
+.Container__graves ul li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: 14px;
+  background-color: #ecf0f1;
+  border-bottom: solid 1px #bdc3c7;
+  color: #333;
+}
+.Container__graves ul li small {
+  font-size: 12px;
+}
+.Container__graves ul li a {
+  color: #2980b9;
+}
+@-moz-keyframes animatedBackground {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+@-webkit-keyframes animatedBackground {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+@-o-keyframes animatedBackground {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}
+@keyframes animatedBackground {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 100% 0;
+  }
+}

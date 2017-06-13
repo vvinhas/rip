@@ -4,34 +4,44 @@ const _ = require('lodash')
  * Parse Grave information
  * @param {object} grave
  */
-const graveParser = grave => {
-  let name, alias, api, fake
+const graveParser = data => {
+  let name, alias, api, fake, crud, type
 
-  if (_.isString(grave)) {
-    alias = grave
+  if (_.isString(data)) {
+    alias = data
     name = `rip-grave-${alias}`
     api = require(path.resolve(`./node_modules/${name}`))
     fake = 0
     return { name, alias, api, fake }
   }
 
-  if (_.isObjectLike(grave) &&
-    _.has(grave, 'name')) {
+  if (_.isObjectLike(data) &&
+    _.has(data, 'grave')) {
     // Create some useful props
-    alias = grave.name
-    fake = (typeof grave.fake === 'number' && grave.fake % 1 === 0) ? grave.fake : 0
-    if (_.has(grave, 'mapsTo')) {
-      name = `custom-grave-${alias}`
-      api = require(path.resolve(grave.mapsTo))
-    } else {
-      name = `rip-grave-${alias}`
-      api = require(path.resolve(`./node_modules/${name}`))
+    alias = data.grave
+    crud = data.crud === true ? true : false
+    fake = (typeof data.fake === 'number' && data.fake % 1 === 0) ? data.fake : 0
+    type = crud ? 'crud' : (_.has(data, 'mapsTo') ? 'custom' : 'package')
+
+    switch (type) {
+      case 'crud':
+        name = `crud-grave-${alias}`
+        api = require('./crudGrave')
+        break;
+      case 'custom':
+        name = `custom-grave-${alias}`
+        api = require(path.resolve(data.mapsTo))
+        break;
+      case 'package':
+        name = `rip-grave-${alias}`
+        api = require(path.resolve(`./node_modules/${name}`))
+        break;  
     }
 
-    return { ...grave, name, alias, api, fake }
+    return { ...data, name, alias, api, fake }
   }
 
-  throw new Error('Invalid grave setup')
+  throw new Error('Invalid Grave Setup')
 }
 
 module.exports = graveParser

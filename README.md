@@ -1,9 +1,9 @@
 # REST In Peace 
-REST In Peace is a dead simple composable API for testing purposes
+REST In Peace is a dead simple composable API for testing purposes.
 
 ## Motivation
 
-How many times you needed an API for testing simple apps or maybe just to learn something new and you had to Google for some public APIs to fetch some random stuff that doesn't actually help.
+How many times you needed an API at hand to test simple apps or maybe just to learn something new and you had to reach for public APIs to fetch some random stuff that doesn't actually help because you don't have access to every REST verb.
 
 Or maybe you just want to share your project with coleagues or collaborators but you need an API to make it work! You either develop a simple backend to run along with your app or setup a Firebase account, maybe Deployd, configure SDKs, setup endpoints; damn _(language!)_, you just want them to see it working...
 
@@ -11,11 +11,11 @@ Or maybe you just want to share your project with coleagues or collaborators but
 
 RIP is an experimental tool to help you test apps that depend on an API. It let you easily share RESTful APIs and take advantage of prebuilt resources made by the community!
 
-Want a Todo CRUD? No problem! Maybe some Users to go along? sure thing! Want to connect'em both? Why not!? RIP can help you achieve these tasks pretty easily.
+Want a Todo CRUD? No problem! Maybe some users too? Sure thing! Want to connect'em both? Why not!? RIP can help you achieve these tasks pretty easily.
 
 ## Installation
 
-You can install RIP globally or on a local project, however, I do recommend that you install it globally to be able to use it in any project.
+You can install RIP globally or on a local project. These examples will install RIP globally.
 
 ```
 npm install --global rip-server
@@ -31,162 +31,225 @@ Now, run the command `rip` on your terminal. You should see a status message tel
 
 ## Usage
 
-To help you understand how RIP works, [I made this video](http://youtube.com/vplusplus) showing some of it's features but I also wrote a very straight forward tutorial for you to quickly tag along.
+To help you understand how RIP works, [I made this video](http://youtube.com/vplusplus) showing some of it's features but I also wrote [a very straight forward tutorial]() for you to quickly tag along ;)
 
-### Let's dig in!
+## Configuring RIP
 
-After having installed `rip` globally, open your terminal and create a folder called `todos` wherever you want, `cd` onto it and then run:
+To let RIP knows how to handle your endpoints, you must config some Graves. The way to setup a grave is by creating a `.riprc` file in the root of your project and specify each grave you want to use.
 
-```
-npm init
-```
-
-It'll ask you a lot of questions, just press `ENTER` until it's finished.
-
-Now you should have a `package.json` file in your project folder. Great!
-
-What kind of person would I be if we were to create anything other than a Todo API?
-
-Luckly, I have a `grave` _(we'll get there in a second)_ that can help us with that!
-
-To install a Todo grave, just run:
-
-```
-yarn add rip-grave-todos
-```
-
-Now we must tell RIP that we want to use that grave! To do so, create a file named `.riprc` in our project root and put this code into it:
+`.riprc` is a simple json file that has only the `graves` directive. It looks a little bit like this:
 
 ```json
 {
-    "graves": [
-        "todos"
-    ]
+  "graves": [
+    "users",
+    "todos"
+  ]
 }
 ```
 
-Save it and the run:
+In this example, we've setup the `users` and `todos` graves.
 
+RIP will look through your dependencies and will try to find the `rip-grave-users` and `rip-grave-todos` packages. If none of them is installed, RIP will throw an error.
+
+## Graves
+
+RIP uses the concept o Graves to address each endpoint. As a fact, each Grave corresponds to an endpoint.
+
+If you have a `todos` grave, you can access it's endpoints over `http://localhost:30001/todos`.
+
+### Grave types
+
+A Grave has basically three types:
+
+#### NPM package
+
+This is the most common use case for RIP. You simply install a RIP Grave package and configure it in your project.
+
+Usually, Grave packages have the prefix `rip-grave-*`, so, if you want to install the Todos Grave, you can install `rip-grave-todos` and reference it in your `.riprc` file.
+
+#### CRUD
+
+You configure a Grave to automatically create CRUD endpoints for an entity.
+
+```json
+{
+  "graves": [{
+    "grave": "posts",
+    "crud": true
+  }]
+}
 ```
-rip
+
+You'll now have access to these endpoints
+
+| Verb | URI | Input | Description |
+|---|---|---|---|
+| `GET` | `posts/all` | _null_ | Retrieve all data stored in `posts` collection.
+| `GET` | `posts/:id` | _null_ | Retrieve a single entry in the `posts` collection.
+| `POST` | `posts` | `data` | Store `data` in `posts` collection. Returns the `_id` field of the new record.
+| `PUT` | `posts/:id` | `data` | Replace the content of an entry for `data`, in `posts` collection.
+| `DELETE` | `posts/:id` | `data` | Delete an entry  in `posts` collection.
+
+The `data` input isn't  validated, so you can store anything you want.
+
+#### Custom
+
+We encourage you to create your own graves and share with everyone or create a particular grave for your project only. It's totally up to you!
+
+If you know [Express](http://expressjs.com/) and [ImmutableJS](https://facebook.github.io/immutable-js), you can create your very own Grave with your predefined endpoints and validations.
+
+To create a custom Grave, you must create a script that export two functions: `init` and `make`.
+
+`init` will be called once when the Grave is about to be appended. It has only one parameter called `fake`, that corresponds to the amount of fake data to generate. It should return the initial state of your Grave store.
+
+```js
+const init = (fake) => { data: [] }
 ```
 
-Sweet! Now for the good stuff :) Using a tool to interact with our API (like [Postman]()), head to `http://localhost:3001/todos/all`.
+`make` will receive an Express `Router` and an instance of the Grave `Store`, that basically outputs ImmutableJS objects and must return the `Router`.
 
-You see the `[]` result over there? Cool, heh? That's it! 
+```js
+const make = (router, store) => router
+```
 
-_JK! Gosh...I can be a prick sometimes..._
+Inside this function, you can define the endpoints using the `Router` instance and RIP will append it to your Grave.
 
-**Grave** is just a silly name for our **Resources**. Each grave corresponds to a resource endpoint in our API and RIP can compose, extend and relate these resources!
+You can check more information about the `Store` in the section bellow.
 
-We'll see that in a moment!
+Now, you must tell RIP how to reach your script, like so:
 
-**Let's keep moving /o/**
+```json
+{
+  "graves": [
+    {
+      "grave": "my-grave",
+      "mapsTo": "./your_script_path.js"
+    }
+  ]
+}
+```
 
-Now it's a good time to checkout the [rip-grave-todos]() repository. Each grave has a detailed README file explaining it's endpoints and what they can do.
+## The Store
 
-You can add a todo by making a `POST` request to `/todos` sending the data `{ author: 'admin@localhost', text: 'Buy eggs' }`. Do that using the tool of your choice and head back to `GET /todos/all`.
+Each Grave have it's own `Store` object. This information is helpful only if you're creating your own Grave.
 
-_Tcharam!_
+A `Store` have only three functions: `setState`, `getState` and `output`.
 
-But remember, since RIP is for testing only, all data is erased after you kill the `rip` service running.
-
-In future versions, I might add some persistance plugins but for now, it's just a plan.
+| Function | Params | Description |
+|---|---|---|
+| `getState` | _none_ | Get the current state of your Grave. Returns an ImmutableJS `Map` object.
+| `setState` | `data` | Set's the current state for your Grave. It **MUST BE** an ImmutableJS `Map` object.
+| `output` | _none_ | Similar to `getState` but translate relationships that a Grave may have. This is the function you will use when outputing data to the browser.
 
 ## Faking Data
 
-RIP allows you to fake some data before the API starts to run. 
+if you're using a Grave package or a custom Grave that implemented the `init` function, RIP can generate some fake data before the API starts to run.
 
-So far, we wrote the simple grave notation. We have an array of graves and each string corresponds to a grave beign defined using the default settings. However, if you want to change the default behavior, we must write the full grave notation. Change our `.riprc` file, like so:
+CRUD Graves cannot generate fake data, since it doesn't know the format of it's data.
 
 ```json
 {
     "graves": [
-        { "name": "todos", "fake": 10 }
+        {
+          "grave": "todos",
+          "fake": 10
+        }
     ]
 }
 ```
 
 That will instruct RIP to fake 10 records on the todo grave, before it starts to run.
 
-Save the file and head to `GET /todos/all` and you should see a list with 10 todos.
-
 ## Relations
 
-RIP allows you to relate some data with other graves and that unleashes a very powerful feature. Since graves are created by the community, it's essential that they can communicate. The way this takes place is by setting relationship across properties.
+RIP allows you to create simple data relationships with another Grave.
 
-Let's add the `users` grave:
+For now, it has two relationship types: `belongsTo` and `hasMany`. 
 
-```
-yarn add rip-grave-users
-```
+To illustrate, we'll create a scenario where we need three graves: `users`, `posts` and `comments`. The state of each Grave is as follows:
 
-Now, let's instruct RIP to use it
-
-```json
+```js
+// User grave state
 {
-    "graves": [
-        "users",
-        { "name": "todos", "fake": 10 }
-    ]
+  data: [{
+    _id: 1,
+    name: "Foobar",
+    email: "foobar@localhost"
+  }]
+}
+
+// Posts grave state
+{
+  data: [{
+    _id: 1,
+    author: 1,
+    title: "Checkout RIP!",
+    body: "RIP is awesome!",
+    comments: [1, 2]
+  }]
+}
+
+// Comments grave state
+{
+  data: [{
+    _id: 1,
+    author: "Anonymous",
+    message: "Sweet!"
+  },{
+    _id: 2,
+    author: "@vinistrings",
+    message: "I love it!"
+  }]
 }
 ```
 
-As you can see, we can mix and match grave notations. RIP is smart enough to identify which one you're using.
-
-Each Todo object provides a prop called `author` that we want to associate with a user from the `users` grave.
-
-Let's setup this relationship now:
+To associate each field to it's related data, we can configure RIP like so.
 
 ```json
 {
-    "graves": [
-        { "name": "users", "fake": 5 },
-        {
-            "name": "todos",
-            "relations": [
-                { "collection": "data", "prop": "author", "mapsTo": "users.data", "field": "_id" }
-            ]
-        }
-    ]
+  "graves": [
+    "users",
+    "comments",
+    {
+      "grave": "posts",
+      "relationships": [
+        { "field": "data.author", "belongsTo": "users.data._id" },
+        { "field": "data.comments", "hasMany": "comments.data._id" },
+      ]
+    },
+  ]
 }
 ```
 
-_Hmm... That sounds complicated..._
+Both directives have the `field` property. That corresponds to the relative path from your Grave store.
 
-It's not. Trust me!
+`belongsTo` and `hasMany` are both exact paths. You must start from the Grave name, to a collection and finally, a property from that collection.
 
-It works like a lookup table. You can read the statement like this:
+Now, if you make the request `GET posts/1` you'll receive the following JSON
 
-> In my Todo grave, go to the `data` collection and map each `author` prop to the collection `users.data`, field `_id`
+```json
+{
+  "_id": 1,
+  "author": {
+    "_id": 1,
+    "name": "Foobar",
+    "email": "foobar@localhost"
+  },
+  "title": "Checkout RIP!",
+  "body": "RIP is awesome!",
+  "comments": [{
+    "_id": 1,
+    "author": "Anonymous",
+    "message": "Sweet!"
+  },{
+    "_id": 2,
+    "author": "@vinistrings",
+    "message": "I love it!"
+  }]
+}
+```
 
-Now make a request to `GET /users/all` and copy one of the users `_id`. Create a new todo the way we did before and set the `author` prop to the User ID you've copied. head to `GET /todos/all` and _Voilà!_
-
-For more details, see the table bellow.
-
-| Field | Description |
-| --- | --- |
-| `collection` | A path that corresponds to a valid _Collection_ from the grave you're in. Remember to check the grave repository to see the shape of it's _Store_ |
-| `prop` | Name of the property to lookup in the `collection` |
-| `mapsTo` | A path to _RIP Store_ that corresponds to a valid _Collection_. In this section, you have access to the whole _RIP Store_. Usually, the first node of the path is the name of the grave you want to reference, followed by a valid path to it's _Store_. In the example above, we use the `users.data` collection. |
-| `field` | Name of the property in the `mapsTo` _Collection_ that reference to the `collection.prop` |
-
-You can create multiple relations for each property in a grave collection.
+You can create multiple relationships for each property in a grave collection.
 
 Always remember to check the grave repository for details about it's Store shape.
-
-## Creating Graves
-
-We encourage you to create your own graves and share with everyone or create a particular grave for your project only. It's totally up to you!
-
-### Basic Structure
-
-_soon..._
-
-### The Store
-
-_soon..._
-
-### Options
-
-_soon..._

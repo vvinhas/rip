@@ -7,6 +7,11 @@ const findIndexById = (id, store) => store.getState()
 
 const validIndex = index => index >= 0
 
+const createDocument = body => {
+  const uid = typeof body._id === 'undefined' ? v4() : body._id
+  return { _id: uid, ...body }
+}
+
 const init = () => ({ data: [] })
 
 const make = (router, store) => {
@@ -31,11 +36,11 @@ const make = (router, store) => {
 
   // Save a document
   router.post('/', (req, res) => {
-    const uid = v4()
+    const document = createDocument(req.body)
     const newState = store.getState()
-      .update('data', documents => documents.push(fromJS({ ...req.body, _id: uid })))
+      .update('data', documents => documents.push(fromJS(document)))
     store.setState(newState)
-    res.json({ _id: uid })
+    res.json({ _id: document._id })
   })
 
   // Replace a document
@@ -43,9 +48,10 @@ const make = (router, store) => {
     const { id } = req.params
     const index = findIndexById(id, store)
     
-    if (validIndex()) {
+    if (validIndex(index)) {
+      const document = createDocument({ _id: id, ...req.body })
       const newState = store.getState()
-        .setIn(['data', index], req.body)
+        .setIn(['data', index], document)
       store.setState(newState)
       res.status(200).end()
     }
@@ -58,7 +64,7 @@ const make = (router, store) => {
     const { id } = req.params
     const index = findIndexById(id, store)
 
-    if (validIndex()) {
+    if (validIndex(index)) {
       const newState = store.getState()
         .deleteIn(['data', index])
       store.setState(newState)

@@ -38,7 +38,8 @@ const run = (config, args) => {
     const router = express.Router()
     app.use(`/${grave.alias}`, grave.api.make(
       router,
-      graveStore.accessCreator()
+      graveStore.accessCreator(),
+      grave
     ))
     // Set the main store
     log.push(`⚰  Adding "${grave.alias}" grave`)

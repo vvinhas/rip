@@ -89,11 +89,11 @@ You'll now have access to these endpoints
 
 | Verb | URI |Description |
 |---|---|---|---|
-| `GET` | `posts/all` | Retrieve all data stored in `posts` collection.
-| `GET` | `posts/:id` | Retrieve a single entry from the `posts` collection.
-| `POST` | `posts` | Store all data sent in the request body to `posts` collection as a document. Returns the `_id` field generated for the record.
-| `PUT` | `posts/:id` | Replace the document from `posts` collection where the ID corresponds to the param.
-| `DELETE` | `posts/:id` | Delete the document from `posts` collection where the ID corresponds to the param.
+| `GET` | `/posts` | Retrieve all data stored in `posts` collection.
+| `GET` | `/posts/:id` | Retrieve a single entry from the `posts` collection.
+| `POST` | `/posts` | Store all data sent in the request body to `posts` collection as a document. Returns the `_id` field generated for the record.
+| `PUT` | `/posts/:id` | Replace the document from `posts` collection where the ID corresponds to the param.
+| `DELETE` | `/posts/:id` | Delete the document from `posts` collection where the ID corresponds to the param.
 
 Data posted to these endpoints are not validated, so you can store anything you want.
 
@@ -111,13 +111,13 @@ To create a custom Grave, you must create a script that export two functions: `i
 const init = (fake) => { data: [] }
 ```
 
-`make` will receive an Express `Router` and an instance of the Grave `Store`, that basically outputs ImmutableJS objects. It must return a `Router` instance.
+`make` will receive an Express `Router`, an instance of the Grave `Store` and an object with the settings defined in `.riprc` for your Grave. It must return a `Router` instance.
 
 ```js
-const make = (router, store) => router
+const make = (router, store, options) => router
 ```
 
-Inside this function, you can define the endpoints using the `Router` instance and RIP will append it to your Grave.
+Inside this function, you can apply middlewares and define endpoints using the `Router` instance. Check Express docs for more information about the `Router` object.
 
 Now, you must tell RIP how to reach your script, like so:
 
@@ -255,6 +255,11 @@ Now, if you make the request `GET posts/1` you'll receive the following JSON
 You can create multiple relationships for each property in a grave collection.
 
 Always remember to check the grave repository for details about it's Store shape.
+
+## Community Graves
+
+- [Todos](https://github.com/vvinhas/rip-grave-todos)
+- [Users](https://github.com/vvinhas/rip-grave-users)
 
 ## License
 

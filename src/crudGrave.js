@@ -8,15 +8,15 @@ const findIndexById = (id, store) => store.getState()
 const validIndex = index => index >= 0
 
 const createDocument = body => {
-  const uid = typeof body._id === 'undefined' ? v4() : body._id
-  return { _id: uid, ...body }
+  const _id = typeof body._id === 'undefined' ? v4() : body._id
+  return { _id, ...body }
 }
 
 const init = () => ({ data: [] })
 
 const make = (router, store) => {
   // Get all data
-  router.get('/all', (req, res) => {
+  router.get('/', (req, res) => {
     const data = store.output().get('data')
     res.json(data ? data.toJSON() : [])
   })

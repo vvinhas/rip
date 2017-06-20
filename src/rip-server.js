@@ -29,19 +29,21 @@ const run = (config, args) => {
     const grave = graveParser(graveObj)
     gravesAvailable.push({ ...grave })
     // Setup the Grave Store
-    const graveStore = store.createGrave(grave.alias, fromJS(grave.api.init(grave.fake)))
+    const graveStore = store.createGrave(grave.alias, fromJS(grave.api.init(grave)))
     // Check for Grave relations
     if (grave.relationships) {
       graveStore.setRelationships(grave.relationships)
     }
     // Apply the router to the app
     const router = express.Router()
-    app.use(`/${grave.alias}`, grave.api.make(
+    const graveRouter = grave.api.make(
       router,
       graveStore.accessCreator(),
       grave
-    ))
-    // Set the main store
+    )
+    // Attach Grave router to RIP
+    app.use(`/${grave.alias}`, graveRouter)
+    // Log
     log.push(`⚰  Adding "${grave.alias}" grave`)
   })
   // Welcome Page

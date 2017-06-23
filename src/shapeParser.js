@@ -1,16 +1,15 @@
 const faker = require('faker')
 
 const parseString = value => {
-  const [type, method] = value.split('.')
+  const [ path, ...args ] = value.split(',')
+  const [type, method] = path.split('.')
 
   if (!faker[type][method]) {
     throw new Error('Invalid Faker method')
   }
 
-  return faker[type][method]();
+  return faker[type][method](...args)
 }
-
-const parseArray = value => value.map(parseString)
 
 const parseObject = value => {
   return Object.keys(value)
@@ -19,11 +18,11 @@ const parseObject = value => {
         case String:
           output[key] = parseString(value[key])
           break
+        case Array:
+          output[key].push(parseObject(value[key]))
+          break
         case Object:
           output[key] = parseObject(value[key])
-          break
-        case Array:
-          output[key] = parseArray(value[key])
           break
         default:
           output[key] = null
@@ -31,7 +30,7 @@ const parseObject = value => {
       }
 
       return output
-    }, {})
+    }, value)
 }
 
 const shapeParser = shape => {

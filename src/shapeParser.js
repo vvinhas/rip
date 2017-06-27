@@ -1,5 +1,7 @@
 const faker = require('faker')
 
+const parseArg = arg => isNaN(arg) ? arg : parseInt(arg)
+
 const parseString = value => {
   const [ path, ...args ] = value.split(',')
   const [type, method] = path.split('.')
@@ -8,7 +10,7 @@ const parseString = value => {
     throw new Error('Invalid Faker method')
   }
 
-  return faker[type][method](...args)
+  return faker[type][method](...args.map(parseArg))
 }
 
 const parseObject = value => {
@@ -30,7 +32,7 @@ const parseObject = value => {
       }
 
       return output
-    }, value)
+    }, {})
 }
 
 const shapeParser = shape => {

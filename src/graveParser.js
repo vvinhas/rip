@@ -21,21 +21,19 @@ const graveParser = data => {
     alias = data.grave
     crud = data.crud === true ? true : false
     fake = (typeof data.fake === 'number' && data.fake % 1 === 0) ? data.fake : 0
-    type = crud ? 'crud' : (_.has(data, 'mapsTo') ? 'custom' : 'package')
 
-    switch (type) {
-      case 'crud':
-        name = `crud-grave-${alias}`
-        api = require('./crudGrave')
-        break;
-      case 'custom':
-        name = `custom-grave-${alias}`
-        api = require(path.resolve(data.mapsTo))
-        break;
-      case 'package':
-        name = `rip-grave-${alias}`
-        api = require(path.resolve(`./node_modules/${name}`))
-        break;  
+    if (crud) {
+      name = `crud-grave-${alias}`
+      api = require('./crudGrave')
+    } else if (_.has(data, 'mapsTo')) {
+      name = `custom-grave-${alias}`
+      api = require(path.resolve(data.mapsTo))
+    } else if (_.has(data, 'endpoints')) {
+      name = `endpoints-grave-${alias}`
+      api = require('./endpointsGrave')
+    } else {
+      name = `rip-grave-${alias}`
+      api = require(path.resolve(`./node_modules/${name}`))
     }
 
     return { ...data, name, alias, api, fake }

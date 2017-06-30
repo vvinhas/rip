@@ -11,7 +11,7 @@ const graveParser = data => {
       api: require('./crudGrave'),
       alias: data,
       fake: 0,
-      shape: {}
+      shape: { _id: 'random.uuid' }
     }
   }
 
@@ -24,10 +24,10 @@ const graveParser = data => {
       api: typeof data.source === 'string' ?
         data.source.startsWith('./') ?
           require(path.resolve(data.source)) :
-          require(path.resolve(`./node_modules/${data.source}`)) :
+          require(path.resolve(`./node_modules/rip-grave-${data.source}`)) :
           require('./crudGrave'),
       fake: (typeof data.fake === 'number' && data.fake % 1 === 0) ? data.fake : 0,
-      shape: typeof data.shape === 'object' ? data.shape : {}
+      shape: typeof data.shape === 'object' ? { _id: 'random.uuid', ...data.shape } : { _id: 'random.uuid' }
     }
   }
 

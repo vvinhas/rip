@@ -13,21 +13,3 @@ html
           each grave in graves
             li
               strong= grave.alias
-              if grave.name.startsWith('rip-grave')
-                |
-                |
-                small
-                  a(href='https://www.npmjs.com/package/'+grave.name)= grave.name
-              else if grave.name.startsWith('crud-grave')
-                |
-                |
-                small
-                  em CRUD
-              else if grave.name.startsWith('endpoints-grave')
-                |
-                |
-                small
-                  em Endpoints
-              else
-                small
-                  em Custom

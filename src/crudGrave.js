@@ -1,5 +1,6 @@
 const { v4 } = require('uuid')
 const { fromJS } = require('immutable')
+const shapeParser = require('./shapeParser')
 
 const findIndexById = (id, store) => store.getState()
   .get('data')
@@ -12,7 +13,14 @@ const createDocument = body => {
   return { _id, ...body }
 }
 
-const init = () => ({ data: [] })
+const init = options => {
+  const data = []
+  const { shape, fake } = options
+  while (data.length < fake) {
+    data.push(shapeParser(shape))
+  }
+  return { data }
+}
 
 const make = (router, store) => {
   // Get all data

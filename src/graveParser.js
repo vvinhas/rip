@@ -5,38 +5,30 @@ const _ = require('lodash')
  * @param {object} grave
  */
 const graveParser = data => {
-  let name, alias, api, fake, crud, type
-
+  // Default settings
   if (_.isString(data)) {
-    alias = data
-    name = `rip-grave-${alias}`
-    api = require(path.resolve(`./node_modules/${name}`))
-    fake = 0
-    return { name, alias, api, fake }
+    return {
+      api: require('./crudGrave'),
+      alias: data,
+      fake: 0,
+      shape: {}
+    }
   }
 
   if (_.isObjectLike(data) &&
     _.has(data, 'grave')) {
-    // Create some useful props
-    alias = data.grave
-    crud = data.crud === true ? true : false
-    fake = (typeof data.fake === 'number' && data.fake % 1 === 0) ? data.fake : 0
-
-    if (crud) {
-      name = `crud-grave-${alias}`
-      api = require('./crudGrave')
-    } else if (_.has(data, 'mapsTo')) {
-      name = `custom-grave-${alias}`
-      api = require(path.resolve(data.mapsTo))
-    } else if (_.has(data, 'endpoints')) {
-      name = `endpoints-grave-${alias}`
-      api = require('./endpointsGrave')
-    } else {
-      name = `rip-grave-${alias}`
-      api = require(path.resolve(`./node_modules/${name}`))
+    // Standarizing props
+    return {
+      ...data,
+      alias: data.grave,
+      api: typeof data.source === 'string' ?
+        data.source.startsWith('./') ?
+          require(path.resolve(data.source)) :
+          require(path.resolve(`./node_modules/${data.source}`)) :
+          require('./crudGrave'),
+      fake: (typeof data.fake === 'number' && data.fake % 1 === 0) ? data.fake : 0,
+      shape: typeof data.shape === 'object' ? data.shape : {}
     }
-
-    return { ...data, name, alias, api, fake }
   }
 
   throw new Error('Invalid Grave Setup')

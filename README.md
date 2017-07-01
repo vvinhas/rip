@@ -154,7 +154,9 @@ You can check more information about the `Store` function in the section "The St
 
 ## Faking Data
 
-if you're using a Grave package or a custom Grave that implemented the `init` function, RIP can generate some fake data before the API starts to run.
+RIP can generate fake data using the awesome [Faker.js](https://github.com/marak/Faker.js/) library to do so.
+
+if you're using a Grave package or a custom Grave that implemented the `init` function, RIP generates fake data into the store before the API starts to run.
 
 ```json
 {
@@ -166,11 +168,11 @@ if you're using a Grave package or a custom Grave that implemented the `init` fu
 }
 ```
 
-That will instruct RIP to fake 10 records on the Todo Grave before it starts to run.
+That will instruct RIP to fake 10 records on the Todo Grave.
 
-CRUD Graves can generate fake data too, but you must define a shape first.
+CRUD Graves can generate fake data too, but you must define a `shape` first.
 
-A shape is an object composed by keys and data type instructions. It uses the awesome [Faker.js](https://github.com/marak/Faker.js/) package to do so.
+`shape` is a simple object composed by keys and data type instructions, following Faker.js methods convention.
 
 Let's create a simple `restaurants` Grave.
 
@@ -197,6 +199,10 @@ Let's create a simple `restaurants` Grave.
   }]
 }
 ```
+
+This will instruct RIP to create 10 fake records following the shape structure.
+
+For more information about available methods, check [Faker.js](https://github.com/marak/Faker.js/) Github page.
 
 ## Relationships
 
@@ -289,7 +295,7 @@ Now, if you make the request `GET posts/1` you'll receive the following JSON
 
 You can create multiple relationships for each property in a grave collection.
 
-Always remember to check the grave repository for details about it's Store shape.
+If you're using a Grave package, remember to check the grave repository for details about it's Store shape.
 
 ## The Store
 

@@ -91,7 +91,7 @@ Or, you can write the full syntax for a grave
 You'll now have access to these endpoints
 
 | Verb | URI |Description |
-|---|---|---|---|
+|---|---|---|
 | `GET` | `/posts` | Retrieve all data stored in `posts` collection.
 | `GET` | `/posts/:id` | Retrieve a single entry from the `posts` collection.
 | `POST` | `/posts` | Store all data sent in the request body to `posts` collection as a document. Returns the `_id` field generated for the record.

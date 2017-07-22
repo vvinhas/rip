@@ -1,44 +1,9 @@
+const parseRelationship = require('./parsers/relationshipParser')
 const { Map, List, fromJS } = require('immutable')
 
 const Store = () => {
   let graves = {}
-  /**
-   * Checks whether the relationship object is valid
-   * @param {object} relationship Relationship raw object
-   */
-  function _isRelationshipValid (relationship) {
-    const [...props] = Object.keys(relationship)
-    const shape = ['field', 'belongsTo', 'hasMany']
-    const valid = shape.filter(prop => props.indexOf(prop) >= 0)
 
-    return (valid.length === 2 && relationship.field)
-  }
-  /**
-   * Parse the relationship JSON to a readable object
-   * @param {object} relationship
-   */
-  function _parseRelationship (relationship) {
-    let type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo
-
-    if (!_isRelationshipValid(relationship)) {
-      throw new Error('Wrong relationship declaration.')
-    }
-
-    pathFrom = relationship.field.split('.')
-    fieldFrom = pathFrom.pop()
-
-    if (relationship.belongsTo) {
-      type = 'belongsTo'
-      pathTo = relationship.belongsTo.split('.')
-    } else {
-      type = 'hasMany'
-      pathTo = relationship.hasMany.split('.')
-    }
-    graveTo = pathTo.shift()
-    fieldTo = pathTo.pop()
-
-    return { type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo }
-  }
   /**
    * Creates a Store used by a grave
    * @param {*} initialState Initial State
@@ -46,18 +11,31 @@ const Store = () => {
    */
   function grave (initialState, persistDriver) {
     let relationships = Map({})
-    let state = initialState
-
+    persistDriver.get().then(data => {
+      if (data === null) {
+        persistDriver.set(initialState.toJS())
+      }
+    })
+    // Sets the state
     const setState = newState => {
-      state = newState
+      persistDriver.set(newState)
     }
+    // Set relationships
     const setRelationships = rels => {
-      relationships = rels.map(rel => _parseRelationship(rel))
+      relationships = rels.map(rel => parseRelationship(rel))
     }
-    const getState = () => state
+    // Returns a promise with data from the store
+    const getState = async () => {
+      try {
+        const state = await persistDriver.get()
+        return fromJS(state)
+      } catch (err) {
+        console.error(err)
+      }
+    }
     const getRelationships = () => relationships
-    const output = () => {
-      let output = state
+    const output = async () => {
+      let output = await getState()
 
       if (relationships) {
         relationships.forEach(rel => {

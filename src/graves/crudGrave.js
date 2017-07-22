@@ -1,6 +1,6 @@
 const { v4 } = require('uuid')
 const { fromJS } = require('immutable')
-const shapeParser = require('./shapeParser')
+const shapeParser = require('../parsers/shapeParser')
 
 const findIndexById = (id, store) => store.getState()
   .get('data')

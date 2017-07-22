@@ -1,4 +1,4 @@
-const { Map, List } = require('immutable')
+const { Map, List, fromJS } = require('immutable')
 
 const Store = () => {
   let graves = {}
@@ -6,24 +6,24 @@ const Store = () => {
    * Checks whether the relationship object is valid
    * @param {object} relationship Relationship raw object
    */
-  function _isRelationshipValid(relationship) {
+  function _isRelationshipValid (relationship) {
     const [...props] = Object.keys(relationship)
     const shape = ['field', 'belongsTo', 'hasMany']
     const valid = shape.filter(prop => props.indexOf(prop) >= 0)
-    
+
     return (valid.length === 2 && relationship.field)
   }
   /**
    * Parse the relationship JSON to a readable object
-   * @param {object} relationship 
+   * @param {object} relationship
    */
-  function _parseRelationship(relationship) {
+  function _parseRelationship (relationship) {
     let type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo
 
     if (!_isRelationshipValid(relationship)) {
       throw new Error('Wrong relationship declaration.')
     }
-    
+
     pathFrom = relationship.field.split('.')
     fieldFrom = pathFrom.pop()
 
@@ -36,28 +36,29 @@ const Store = () => {
     }
     graveTo = pathTo.shift()
     fieldTo = pathTo.pop()
-    
+
     return { type, pathFrom, fieldFrom, graveTo, pathTo, fieldTo }
   }
   /**
    * Creates a Store used by a grave
    * @param {*} initialState Initial State
+   * @param {Object} options Available options
    */
-  function grave(initialState) {
-    let state = initialState
+  function grave (initialState, persistDriver) {
     let relationships = Map({})
+    let state = initialState
 
-    const setState = (newState) => {
+    const setState = newState => {
       state = newState
     }
-    const setRelationships = (rels) => {
+    const setRelationships = rels => {
       relationships = rels.map(rel => _parseRelationship(rel))
     }
     const getState = () => state
     const getRelationships = () => relationships
     const output = () => {
       let output = state
-      
+
       if (relationships) {
         relationships.forEach(rel => {
           const graveTo = graves[rel.graveTo]
@@ -65,7 +66,7 @@ const Store = () => {
           if (!graveTo) {
             return
           }
-          
+
           switch (rel.type) {
             // BelongsTo relationships search for documents in the Store
             // and try to find a match based on the fields declared in a relationship
@@ -91,7 +92,7 @@ const Store = () => {
               })
               break
             // HasMany relationships try to find a match in another Store
-            // that corresponds to values inside a List, based on the 
+            // that corresponds to values inside a List, based on the
             // field declared in the relationship.
             // It keeps doing that for each value inside the List.
             case 'hasMany':
@@ -109,8 +110,8 @@ const Store = () => {
                     const match = graveTo.getState()
                       .getIn([...rel.pathTo])
                       .find(docTo => docTo.get(rel.fieldTo) === value)
-                    
-                    return match ? match : fieldFrom
+
+                    return match || fieldFrom
                   }))
                 })
               })
@@ -138,11 +139,12 @@ const Store = () => {
   }
   /**
    * Create a new grave and its Store
-   * @param {string} graveName 
-   * @param {*} initialState 
+   * @param {string} graveName
+   * @param {*} initialState
+   * @param {Object} options
    */
-  const createGrave = (graveName, initialState) => {
-    graves[graveName] = grave(initialState)
+  const createGrave = (graveName, initialState, persistDriver = null) => {
+    graves[graveName] = grave(initialState, persistDriver)
     return graves[graveName]
   }
 

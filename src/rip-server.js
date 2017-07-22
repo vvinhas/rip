@@ -6,15 +6,16 @@ const app = express()
 const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
-// const pug = require('pug')
-const graveParser = require('./graveParser')
+const graveParser = require('./parsers/graveParser')
+const configParser = require('./parsers/configParser')
 const store = require('./store')
 const { fromJS } = require('immutable')
 
 const run = (config, args) => {
   const log = []
   let gravesAvailable = []
-
+  // Parse the .graverc file
+  config = configParser(config)
   // Setting some middlewares
   app.use(cors())
   app.use(bodyParser.json())
@@ -28,8 +29,14 @@ const run = (config, args) => {
     // Parse the information captured for each grave
     const grave = graveParser(graveObj)
     gravesAvailable.push({ ...grave })
+    // Check for persist driver
+    const persistDriver = config.persist ? config.persist(config)(grave.alias) : null
     // Setup the Grave Store
-    const graveStore = store.createGrave(grave.alias, fromJS(grave.api.init(grave)))
+    const graveStore = store.createGrave(
+      grave.alias,
+      fromJS(grave.api.init(grave)),
+      persistDriver
+    )
     // Check for Grave relations
     if (grave.relationships) {
       graveStore.setRelationships(grave.relationships)

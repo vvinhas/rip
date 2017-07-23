@@ -11,13 +11,12 @@ const Store = (driver) => {
    */
   function grave (graveObj) {
     const { alias, api } = graveObj
-    const initialState = fromJS(api.init(graveObj))
     const state = driver(alias)
     let relationships = Map({})
     // Set initial state to persistence driver, if there's no data
     state.get().then(data => {
       if (data === null) {
-        state.set(initialState.toJS())
+        state.set(api.init(graveObj))
       }
     })
     // Sets the state

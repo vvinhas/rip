@@ -7,16 +7,14 @@ const app = express()
 const server = require('http').Server(app)
 const cors = require('cors')
 const bodyParser = require('body-parser')
-const graveParser = require('./parsers/graveParser')
-const configParser = require('./parsers/configParser')
-const store = require('./store')
-const { fromJS } = require('immutable')
+const configParser = require('./parsers')
+const storeCreator = require('./store')
 
 const run = (config, args) => {
-  const log = []
-  let gravesAvailable = []
-  // Parse the .graverc file
   config = configParser(config)
+  const { persist, graves } = config
+  const store = storeCreator(persist)
+  const log = []
   // Setting some middlewares
   app.use(cors())
   app.use(bodyParser.json())
@@ -26,37 +24,29 @@ const run = (config, args) => {
   app.set('views', path.join(__dirname, './welcome-page/views'))
   app.set('view engine', 'pug')
   // Config Graves
-  config.graves.forEach(graveObj => {
-    // Parse the information captured for each grave
-    const grave = graveParser(graveObj)
-    gravesAvailable.push({ ...grave })
-    // Check for persist driver
-    const persistDriver = config.persist ? config.persist(config)(grave.alias) : null
+  graves.map(grave => {
+    const { alias, api, relationships } = grave
     // Setup the Grave Store
-    const graveStore = store.createGrave(
-      grave.alias,
-      fromJS(grave.api.init(grave)),
-      persistDriver
-    )
+    const graveStore = store.createGrave(grave)
     // Check for Grave relations
-    if (grave.relationships) {
-      graveStore.setRelationships(grave.relationships)
+    if (relationships) {
+      graveStore.setRelationships(relationships)
     }
     // Apply the router to the app
     const router = express.Router()
-    const graveRouter = grave.api.make(
+    const graveRouter = api.make(
       router,
       graveStore.accessCreator(),
       grave
     )
     // Attach Grave router to RIP
-    app.use(`/${grave.alias}`, graveRouter)
+    app.use(`/${alias}`, graveRouter)
     // Log
-    log.push(`⚰  Adding "${grave.alias}" grave`)
+    log.push(`⚰  Adding "${alias}" grave`)
   })
   // Welcome Page
   app.get('/', (req, res) => {
-    res.render('index', { graves: gravesAvailable })
+    res.render('index', { graves })
   })
   // Port Settings
   const port = args.port ? args.port : 3001

@@ -1,7 +1,7 @@
-const parseRelationship = require('./parsers/relationshipParser')
+const relationshipParser = require('./parsers/relationship')
 const { Map, List, fromJS } = require('immutable')
 
-const Store = () => {
+const Store = (driver) => {
   let graves = {}
 
   /**
@@ -9,26 +9,30 @@ const Store = () => {
    * @param {*} initialState Initial State
    * @param {Object} options Available options
    */
-  function grave (initialState, persistDriver) {
+  function grave (graveObj) {
+    const { alias, api } = graveObj
+    const initialState = fromJS(api.init(graveObj))
+    const state = driver(alias)
     let relationships = Map({})
-    persistDriver.get().then(data => {
+    // Set initial state to persistence driver, if there's no data
+    state.get().then(data => {
       if (data === null) {
-        persistDriver.set(initialState.toJS())
+        state.set(initialState.toJS())
       }
     })
     // Sets the state
     const setState = newState => {
-      persistDriver.set(newState)
+      state.set(newState)
     }
     // Set relationships
     const setRelationships = rels => {
-      relationships = rels.map(rel => parseRelationship(rel))
+      relationships = rels.map(relationshipParser)
     }
     // Returns a promise with data from the store
     const getState = async () => {
       try {
-        const state = await persistDriver.get()
-        return fromJS(state)
+        const data = await state.get()
+        return fromJS(data)
       } catch (err) {
         console.error(err)
       }
@@ -38,7 +42,7 @@ const Store = () => {
       let output = await getState()
 
       if (relationships) {
-        relationships.forEach(rel => {
+        relationships.map(rel => {
           const graveTo = graves[rel.graveTo]
           // If there's no grave defined, continue the loop...
           if (!graveTo) {
@@ -115,15 +119,17 @@ const Store = () => {
       accessCreator
     }
   }
+
   /**
    * Create a new grave and its Store
    * @param {string} graveName
    * @param {*} initialState
    * @param {Object} options
    */
-  const createGrave = (graveName, initialState, persistDriver = null) => {
-    graves[graveName] = grave(initialState, persistDriver)
-    return graves[graveName]
+  const createGrave = graveObj => {
+    const { alias } = graveObj
+    graves[alias] = grave(graveObj)
+    return graves[alias]
   }
 
   return {
@@ -131,4 +137,4 @@ const Store = () => {
   }
 }
 
-module.exports = Store()
+module.exports = Store

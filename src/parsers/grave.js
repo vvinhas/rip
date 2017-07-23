@@ -4,11 +4,11 @@ const _ = require('lodash')
  * Parse Grave information
  * @param {object} grave
  */
-const graveParser = data => {
+module.exports = data => {
   // Default settings
   if (_.isString(data)) {
     return {
-      api: require('../graves/crudGrave'),
+      api: require('../graves/crud'),
       alias: data,
       fake: 0,
       shape: { _id: 'random.uuid' }
@@ -25,7 +25,7 @@ const graveParser = data => {
         data.source.startsWith('./') ?
           require(path.resolve(data.source)) :
           require(path.resolve(`./node_modules/rip-grave-${data.source}`)) :
-          require('../graves/crudGrave'),
+          require('../graves/crud'),
       fake: (typeof data.fake === 'number' && data.fake % 1 === 0) ? data.fake : 0,
       shape: typeof data.shape === 'object' ? { _id: 'random.uuid', ...data.shape } : { _id: 'random.uuid' }
     }
@@ -33,5 +33,3 @@ const graveParser = data => {
 
   throw new Error('Invalid Grave Setup')
 }
-
-module.exports = graveParser

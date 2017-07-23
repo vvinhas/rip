@@ -17,7 +17,7 @@ const parseValue = value => {
 
 const parseString = value => {
   // Checks if the pattern corresponds to a Faker method
-  if (!/^[a-z]+?\.[a-z]+?(\,[a-z0-9]+)*?$/i.test(value)) {
+  if (!/^[a-z]+?\.[a-z]+?(,[a-z0-9]+)*?$/i.test(value)) {
     return value
   }
 
